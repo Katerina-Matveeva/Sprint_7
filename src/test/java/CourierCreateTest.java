@@ -1,4 +1,6 @@
-import io.qameta.allure.Step;
+
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
 import models.CourierLoginModel;
 import models.CourierModel;
 import org.junit.After;
@@ -6,25 +8,29 @@ import org.junit.Test;
 import steps.CourierSteps;
 
 import static data.TestData.*;
+import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.hamcrest.Matchers.equalTo;
 
+@DisplayName("Тесты на создание курьера")
 public class CourierCreateTest extends BaseApiTest {
     private int courierId;
 
     @Test
-    @Step("Создание курьера с валидными данными")
+    @DisplayName("Создание курьера с валидными данными")
+    @Description("Проверяет успешное создание курьера с корректными данными")
     public void testCreateCourierSuccess() {
         CourierModel courier = new CourierModel(LOGIN, PASSWORD, FIRSTNAME);
         CourierSteps.createCourier(courier)
                 .then()
-                .statusCode(201)
+                .statusCode(HTTP_CREATED)
                 .body("ok", equalTo(true));
-        courierId = CourierSteps.loginCourier(new CourierLoginModel(LOGIN, PASSWORD)).jsonPath().getInt("id");
     }
+
     // Тест падает (Expected: Этот логин уже используется
 //  Actual: Этот логин уже используется. Попробуйте другой.)
     @Test
-    @Step("Создание двух одинаковых курьеров")
+    @DisplayName("Создание двух одинаковых курьеров")
+    @Description("Проверяет ошибку при попытке создать курьера с существующим логином")
     public void testCreateDuplicateCourier() {
         CourierModel courier = new CourierModel(LOGIN, PASSWORD, FIRSTNAME);
         CourierSteps.createCourier(courier);
@@ -32,11 +38,11 @@ public class CourierCreateTest extends BaseApiTest {
                 .then()
                 .statusCode(409)
                 .body("message", equalTo("Этот логин уже используется"));
-        courierId = CourierSteps.loginCourier(new CourierLoginModel(LOGIN, PASSWORD)).jsonPath().getInt("id");
     }
 
     @Test
-    @Step("Создание курьера без обязательного поля login")
+    @DisplayName("Создание курьера без обязательного поля login")
+    @Description("Проверяет ошибку при создании курьера без логина")
     public void testCreateCourierWithoutLogin() {
         CourierModel courier = new CourierModel(null, PASSWORD, FIRSTNAME);
         CourierSteps.createCourier(courier)
@@ -46,7 +52,8 @@ public class CourierCreateTest extends BaseApiTest {
     }
 
     @Test
-    @Step("Создание курьера без обязательного поля password")
+    @DisplayName("Создание курьера без обязательного поля password")
+    @Description("Проверяет ошибку при создании курьера без пароля")
     public void testCreateCourierWithoutPassword() {
         CourierModel courier = new CourierModel(LOGIN, null, FIRSTNAME);
         CourierSteps.createCourier(courier)
@@ -58,6 +65,7 @@ public class CourierCreateTest extends BaseApiTest {
     @After
     public void tearDown() {
         if (courierId != 0) {
+            courierId = CourierSteps.loginCourier(new CourierLoginModel(LOGIN, PASSWORD)).jsonPath().getInt("id");
             CourierSteps.deleteCourier(courierId);
         }
     }
